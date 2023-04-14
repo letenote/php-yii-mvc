@@ -2,103 +2,124 @@
 
 namespace app\models;
 
-class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
+use Yii;
+use yii\base\NotSupportedException;
+
+/**
+ * This is the model class for table "User".
+ *
+ * @property int $id
+ * @property string $firstName
+ * @property string $lastName
+ * @property string $email
+ * @property string $password
+ * @property int $status
+ * @property string|null $authKey
+ * @property string|null $accessToken
+ * @property string $createAt
+ * @property string $updateAt
+ * @property int $role_id
+ *
+ * @property Roles $role
+ */
+class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
-    public $id;
-    public $username;
-    public $password;
-    public $authKey;
-    public $accessToken;
-
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
-
+    const STATUS_ACTIVE = 10;
+    CONST STATUS_INACTIVE = 0;
+    /**
+     * {@inheritdoc}
+     */
+    public static function tableName()
+    {
+        return 'User';
+    }
 
     /**
      * {@inheritdoc}
      */
+    public function rules()
+    {
+        return [
+            [['firstName', 'lastName', 'email', 'password', 'status', 'role_id'], 'required'],
+            [['role_id'], 'integer'],
+            [['createAt', 'updateAt'], 'safe'],
+            [['firstName', 'lastName', 'password'], 'string', 'max' => 20],
+            [['email'], 'string', 'max' => 50],
+            [['authKey', 'accessToken'], 'string', 'max' => 255],
+            [['email'], 'unique'],
+            [['role_id'], 'exist', 'skipOnError' => true, 'targetClass' => Roles::class, 'targetAttribute' => ['role_id' => 'id']],
+            ['status', 'default', 'value' => self::STATUS_ACTIVE],
+            ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_INACTIVE]]
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id' => 'ID',
+            'firstName' => 'First Name',
+            'lastName' => 'Last Name',
+            'email' => 'Email',
+            'password' => 'Password',
+            'status' => 'Status',
+            'authKey' => 'Auth Key',
+            'accessToken' => 'Access Token',
+            'createAt' => 'Create At',
+            'updateAt' => 'Update At',
+            'role_id' => 'Role ID',
+        ];
+    }
+
+    /**
+     * Gets query for [[Role]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getRole()
+    {
+        return $this->hasOne(Roles::class, ['id' => 'role_id']);
+    }
+
     public static function findIdentity($id)
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return static::findOne(['id' => $id, 'status' => self::STATUS_ACTIVE]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return static::findOne(['accessToken' => $token]);
     }
 
-    /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
-     */
-    public static function findByUsername($username)
-    {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getAuthKey()
     {
         return $this->authKey;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function validateAuthKey($authKey)
     {
-        return $this->authKey === $authKey;
+        return $this->getAuthKey() === $authKey;
     }
 
-    /**
-     * Validates password
-     *
-     * @param string $password password to validate
-     * @return bool if password provided is valid for current user
-     */
+    public static function findByEmail($email)
+    {
+        return static::findOne(['email' => $email, 'status' => self::STATUS_ACTIVE]);
+    }
+
     public function validatePassword($password)
     {
         return $this->password === $password;
+    }
+
+    public function getFullName()
+    {
+        return $this->firstName." R".$this->lastName;
     }
 }
