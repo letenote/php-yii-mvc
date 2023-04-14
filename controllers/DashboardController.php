@@ -12,6 +12,21 @@ use app\models\ContactForm;
 
 class DashboardController extends Controller
 {
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::class,
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'actions' => ['index'],
+                        'roles' => ['@'],
+                    ],
+                ]
+            ],
+        ];
+    }
     public function actions()
     {
         return [
