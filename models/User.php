@@ -122,4 +122,9 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     {
         return $this->firstName." R".$this->lastName;
     }
+
+    public function isAdmin(): bool
+    {
+        return $this->role_id === 1;
+    }
 }

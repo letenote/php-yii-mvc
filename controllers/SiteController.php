@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\User;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
@@ -77,6 +78,9 @@ class SiteController extends Controller
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
+            if(Yii::$app->user->identity->isAdmin()){
+                return $this->redirect('/dashboard');
+            }
             return $this->goBack();
         }
 

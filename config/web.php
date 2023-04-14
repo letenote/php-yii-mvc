@@ -12,6 +12,18 @@ $config = [
         '@npm'   => '@vendor/npm-asset',
     ],
     'components' => [
+        'urlManager' => [
+            'enablePrettyUrl'     => true,
+            'showScriptName'      => false,
+            'enableStrictParsing' => false,
+            'rules' => [
+                [
+                    'pattern' => 'dashboard',
+                    'route'   => 'dashboard',
+                    'suffix'  => '',
+                ],
+            ]
+        ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'VU1naKoVzEpPv4pPCKaOVGaELox3-vK2',
