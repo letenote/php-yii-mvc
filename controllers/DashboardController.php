@@ -38,6 +38,9 @@ class DashboardController extends Controller
 
     public function actionIndex()
     {
+        if(!Yii::$app->user->identity->isAdmin()){
+            return $this->redirect('/');
+        }
         return $this->render('index');
     }
 }
